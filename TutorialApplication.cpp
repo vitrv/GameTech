@@ -89,7 +89,7 @@ void TutorialApplication::createScene(void)
     if(isServer)
     	server = new Server(net);
     else
-		client = new Client(net);
+		client = new Client(net, "128.83.130.89");
 
     ball = new Ball(mSceneMgr, sim, isServer);
     bCourt = new PlayingField(mSceneMgr, sim);

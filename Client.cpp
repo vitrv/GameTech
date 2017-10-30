@@ -3,7 +3,7 @@
 Client::Client(NetManager* net, Ogre::String host_ip)
 {
 	netMgr = net;
-	netMgr->joinMultiplayer(host_ip);
+	netMgr->joinMultiPlayer(host_ip);
 }
 
 void Client::joinLobby(){

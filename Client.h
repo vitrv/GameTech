@@ -6,7 +6,7 @@ class Client{
 protected:
 	NetManager* netMgr;
 public:
-	Client(NetManager* net);
+	Client(NetManager* net, Ogre::String host_ip);
 	void joinLobby();
 	void update(Ogre::String message);
 };
