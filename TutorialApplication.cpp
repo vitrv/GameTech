@@ -205,12 +205,12 @@ bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
   if(!isServer){
     client->update(Ogre::StringConverter::toString(lPaddle->getPosition()));
     client->update(Ogre::StringConverter::toString(ball->getPosition()));
-    //temporary
-    rPaddle->getNode()->setPosition(Ogre::Vector3(ball->getPosition().x, 50,-1200));
-    //rPaddle->getBody()->setPosition(btVector3(ball->getPosition().x, 50,-1200));
   }
   else{
     server->update(Ogre::StringConverter::toString(lPaddle->getPosition()));
+
+    //rPaddle->getNode()->setPosition(Ogre::Vector3(ball->getPosition().x, 50,-1200));
+    //rPaddle->getBody()->getMotionState()->updateTransform(btVector3(ball->getPosition().x, 50,-1200));
   }
 
 
