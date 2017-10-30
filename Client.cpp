@@ -1,10 +1,9 @@
 #include "Client.h"
 
-Client::Client(NetManager* net)
+Client::Client(NetManager* net, Ogre::String host_ip)
 {
 	netMgr = net;
-	netMgr->addNetworkInfo(PROTOCOL_UDP, "player1");
-	netMgr->startClient();
+	netMgr->joinMultiplayer(host_ip);
 }
 
 void Client::joinLobby(){
