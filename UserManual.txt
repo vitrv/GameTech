@@ -1,0 +1,13 @@
+User Manual
+-----------
+The game we made is brick breaker.  The objective is to destroy all the bricks on the opposte side of the arena from the paddle by hitting them with the ball.  The game also has a point system to show how well they did with 1 life.  The player gains 10 points every time they hit a brick.  Red bricks are destroyed after 1 hit and blue bricks are destroyed after 2.  The ball respawns if the ball gets behind the paddle into your "goal."  After this, the ball starts in the middle of the arena and rolls towards you.
+
+Controls
+--------
+Move paddle right: c
+Move paddle left: z
+Zoom in: s
+Zoom out:x
+Look around: mouse
+Toggle mute sounds: m
+Exit game: esc
