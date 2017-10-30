@@ -14,7 +14,7 @@ Paddle::Paddle(Ogre::String name, Ogre::SceneManager* scnMgr,
 	rootNode->setScale(2, .75, .5);
 
 	mass = 0.0f;
-	restitution = 4.0f;
+	restitution = 2.5f;
 	friction = 0.0f;
 	yaw = 0;
 	lastTime = 0.0;

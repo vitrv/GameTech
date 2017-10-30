@@ -8,7 +8,7 @@ class Ball : public GameObject {
 protected:
 	Ogre::Real bRadius;
 public:
-	Ball(Ogre::SceneManager* mNode, Simulator* sim);
+	Ball(Ogre::SceneManager* mNode, Simulator* sim, bool server);
 	void update(float elapsedTime);
 	bool firstHit;
 	int score;

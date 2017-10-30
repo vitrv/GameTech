@@ -2,12 +2,11 @@
 #include "NetManager.h"
 #include "Simulator.h"
 
-class Server{
+class Client{
 protected:
 	NetManager* netMgr;
 public:
-	Server(NetManager* net);
-	void startLobby();
-	void closeLobby();
+	Client(NetManager* net);
+	void joinLobby();
 	void update(Ogre::String message);
 };

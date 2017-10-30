@@ -1,6 +1,6 @@
 #include "Ball.h"
 
-Ball::Ball(Ogre::SceneManager* scnMgr, Simulator* sim) : GameObject("ball",scnMgr,sim)
+Ball::Ball(Ogre::SceneManager* scnMgr, Simulator* sim, bool server) : GameObject("ball",scnMgr,sim)
 {
 	geom = scnMgr->createEntity("ball", Ogre::SceneManager::PT_SPHERE);
 	geom->setMaterialName("blank");
@@ -9,7 +9,10 @@ Ball::Ball(Ogre::SceneManager* scnMgr, Simulator* sim) : GameObject("ball",scnMg
 	rootNode->setPosition(-300,50,0);
 	restitution = 0.6f;
 	friction = 0.1f;
-	mass = 1.0f;
+	if(server)
+	    mass = 1.0f;
+	else
+	    mass = 0.0f;
 	bRadius = 40.0f;
 	shape = new btSphereShape(bRadius);
 	firstHit = false;

@@ -10,7 +10,7 @@ Simulator::Simulator() {
  overlappingPairCache,
  solver,
  collisionConfiguration);
- dynamicsWorld->setGravity(btVector3(0.0f, -10.0f, 100.0f));
+ dynamicsWorld->setGravity(btVector3(0.0f, -10.0f, 0.0f));
  dynamicsWorld->applyGravity();
  //TODO:Add collision shapes to reuse among rigid bodies
 }

@@ -23,7 +23,7 @@ http://www.ogre3d.org/wiki/
 #include "PlayingField.h"
 #include "Paddle.h"
 #include "Simulator.h"
-#include "Server.h"
+#include "NetManager.h"
 #include <OgreHardwarePixelBuffer.h>
 #include <string>
 #include <CEGUI/CEGUI.h>
@@ -44,7 +44,7 @@ protected:
 	Simulator* sim;
 	PlayingField* bCourt;
   NetManager* net;
-  Server* server;
+  //Server* server;
   CEGUI::OgreRenderer* mRenderer;
 
 	bool zPressed;

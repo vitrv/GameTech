@@ -45,6 +45,7 @@ public:
 	void addToSimulator();
 	Ogre::SceneNode* getNode() { return rootNode; }
 	Ogre::Entity* getEntity() { return geom; }
+	Ogre::Vector3 getPosition() { return rootNode->getPosition(); }
 	void turnOffSound();
 	void turnOnSound();
 	virtual void update(Ogre::Real) {}

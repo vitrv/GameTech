@@ -1,16 +1,14 @@
 #include "Server.h"
 
-Server::Server(Ogre::SceneManager* scnMgr, Simulator* sim, NetManager* net)
+Server::Server(NetManager* net)
 {
-	sceneMgr = scnMgr;
-	simulator = sim;
 	netMgr = net;
 	netMgr->addNetworkInfo(PROTOCOL_UDP, "player1");
 	netMgr->startServer();
 }
 
 void Server::startLobby(){
-	netMgr->multiPlayerInit(1);
+	netMgr->multiPlayerInit();
 }
 
 void Server::closeLobby(){

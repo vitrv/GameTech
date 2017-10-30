@@ -19,6 +19,8 @@ http://www.ogre3d.org/wiki/
 #include <OgreMeshManager.h>
 #include "SDL/SDL.h"
 #include "SDL/SDL_mixer.h"
+#include "Client.h"
+#include "Server.h"
 
 using namespace Ogre;
 
@@ -27,6 +29,9 @@ CEGUI::Window *button1 = NULL;
 CEGUI::Window *button2 = NULL;
 int player1;
 int player2;
+bool isServer;
+Server* server;
+Client* client;
 
 //---------------------------------------------------------------------------
 TutorialApplication::TutorialApplication(void) : 
@@ -34,7 +39,6 @@ TutorialApplication::TutorialApplication(void) :
     lPaddle(0),
     rPaddle(0),
     sim(0),
-    server(0),
     net(0),
     zPressed(false),
     cPressed(false), 
@@ -43,6 +47,7 @@ TutorialApplication::TutorialApplication(void) :
 {
 	player1 = 0;
 	player2 = 0;
+	isServer = true;
 }
 //---------------------------------------------------------------------------
 TutorialApplication::~TutorialApplication(void)
@@ -77,21 +82,30 @@ void TutorialApplication::createScene(void)
     mSceneMgr->setAmbientLight(Ogre::ColourValue(0.4, 0.3, 0.5 ));
     mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
 
-
     sim = new Simulator();
 
     net = new NetManager();
     net->initNetManager();
-    server = new Server(mSceneMgr, sim, net);
+    if(isServer)
+    	server = new Server(net);
+    else
+		client = new Client(net);
 
-    ball = new Ball(mSceneMgr, sim);
+    ball = new Ball(mSceneMgr, sim, isServer);
     bCourt = new PlayingField(mSceneMgr, sim);
-    lPaddle = new Paddle("left", mSceneMgr, sim, Ogre::Vector3(0,50,1200), 0);
-    rPaddle = new Paddle("right", mSceneMgr, sim, Ogre::Vector3(0,50,-1200), 0);
+    if(isServer){
+        lPaddle = new Paddle("left", mSceneMgr, sim, Ogre::Vector3(0,50,1200), 0);
+    	rPaddle = new Paddle("right", mSceneMgr, sim, Ogre::Vector3(0,50,-1200), 0);
+    }
+    else{
+        lPaddle = new Paddle("left", mSceneMgr, sim, Ogre::Vector3(0,50,-1200), 0);
+        rPaddle = new Paddle("right", mSceneMgr, sim, Ogre::Vector3(0,50,1200), 0);
+    }
 
     ball->addToSimulator();
     bCourt->addToSimulator();
     lPaddle->addToSimulator();
+    rPaddle->addToSimulator();
 
     Ogre::Light* light = mSceneMgr->createLight("MainLight");
     light->setPosition(500, 500, 500);
@@ -103,21 +117,22 @@ void TutorialApplication::createScene(void)
     pointLight->setDiffuseColour(0.9, 0.5, 0.8);
     pointLight->setSpecularColour(0.2, 0.0, 0.1);
     pointLight->setPosition(Ogre::Vector3(0, 0, 0));
-
+   
     mCamera->setPosition(-300, 2200, 950);
     mCamera->lookAt(Ogre::Vector3(-300,50,750));
 
     //Starting score display   
-    std::stringstream ss;
-    ss << player1;
-    std::string display = "Player1: " + ss.str();
+    std::stringstream ss1;
+    ss1 << player1;
+    std::string display = "YOU: " + ss1.str();
     button1->setText(display);
     button1->setSize(CEGUI::USize(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
-    ss << player2;
-    display = "Player2: " + ss.str();
+    std::stringstream ss2;
+    ss2 << player2;
+    display = "NOT YOU: " + ss2.str();
     button2->setText(display);
     button2->setSize(CEGUI::USize(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
-    button2->setPosition(CEGUI::UVector2(CEGUI::UDim(0.5f, 0),
+    button2->setPosition(CEGUI::UVector2(CEGUI::UDim(0.85f, 0),
                                 CEGUI::UDim(0.0f, 0)));
 
     sheet->addChild(button1);
@@ -167,25 +182,35 @@ bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
     }
 
   if(!ball->firstHit){
-    ball->getBody()->applyCentralForce(btVector3(100, 0, 300));
+    ball->getBody()->applyCentralForce(btVector3(100, 0, 600));
   }
   if(ball->getNode()->getPosition().z >= 1300){
     if(sound)
         Mix_PlayChannel( -1, bounce, 0 );
-	player1++;
+	player2++;
     delete ball;
-    ball = new Ball(mSceneMgr, sim);
+    ball = new Ball(mSceneMgr, sim, isServer);
     ball->addToSimulator();
-    bCourt->rebuildObstacles(mSceneMgr, sim);
+    //bCourt->rebuildObstacles(mSceneMgr, sim);
   }
   if(ball->getNode()->getPosition().z <= -1300){
     if(sound)
         Mix_PlayChannel( -1, bounce, 0 );
-	player2++;
+	player1++;
     delete ball;
-    ball = new Ball(mSceneMgr, sim);
+    ball = new Ball(mSceneMgr, sim, isServer);
     ball->addToSimulator();
-    bCourt->rebuildObstacles(mSceneMgr, sim);
+    //bCourt->rebuildObstacles(mSceneMgr, sim);
+  }
+  if(!isServer){
+    client->update(Ogre::StringConverter::toString(lPaddle->getPosition()));
+    client->update(Ogre::StringConverter::toString(ball->getPosition()));
+    //temporary
+    rPaddle->getNode()->setPosition(Ogre::Vector3(ball->getPosition().x, 50,-1200));
+    //rPaddle->getBody()->setPosition(btVector3(ball->getPosition().x, 50,-1200));
+  }
+  else{
+    server->update(Ogre::StringConverter::toString(lPaddle->getPosition()));
   }
 
 
@@ -197,12 +222,13 @@ bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
   mCamera->setPosition(newpos);
 
   //Update score display
-  std::stringstream ss;
-  ss << player1;
-  std::string display = "Player 1: " + ss.str();
+  std::stringstream ss1;
+  ss1 << player1;
+  std::string display = "YOU: " + ss1.str();
   button1->setText(display);
-  ss << player1;
-  display = "Player 2: " + ss.str();
+  std::stringstream ss2;
+  ss2 << player2;
+  display = "NOT YOU: " + ss2.str();
   button2->setText(display);
 
   return ret;
