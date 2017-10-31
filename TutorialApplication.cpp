@@ -86,8 +86,10 @@ void TutorialApplication::createScene(void)
 
     net = new NetManager();
     net->initNetManager();
-    if(isServer)
+    if(isServer){
     	server = new Server(net);
+        server->startLobby();
+    }
     else
 		client = new Client(net, "128.83.130.90");
 

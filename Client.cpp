@@ -7,7 +7,7 @@ Client::Client(NetManager* net, Ogre::String host_ip)
 }
 
 void Client::joinLobby(){
-	netMgr->stopClient();
+	netMgr->close();
 }
 
 void Client::update(Ogre::String message){
