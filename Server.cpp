@@ -3,7 +3,7 @@
 Server::Server(NetManager* net)
 {
 	netMgr = net;
-	netMgr->addNetworkInfo(PROTOCOL_ALL, "player1");
+	netMgr->addNetworkInfo(PROTOCOL_UDP, NULL, 51215);
 	netMgr->startServer();
 }
 

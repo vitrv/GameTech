@@ -46,6 +46,7 @@ public:
 	Ogre::SceneNode* getNode() { return rootNode; }
 	Ogre::Entity* getEntity() { return geom; }
 	Ogre::Vector3 getPosition() { return rootNode->getPosition(); }
+	OgreMotionState* getMotionState() { return motionState; }
 	void turnOffSound();
 	void turnOnSound();
 	virtual void update(Ogre::Real) {}

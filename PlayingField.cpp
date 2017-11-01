@@ -4,22 +4,22 @@
 
 PlayingField::PlayingField(Ogre::SceneManager* scnMgr, Simulator* sim){
 	walls[0] = new Wall(scnMgr, sim, Ogre::Vector3::UNIT_Y, 
-	Ogre::Vector3::UNIT_Z, Ogre::Vector3(0,0,0), "floor", 1200, 3000);
+	Ogre::Vector3::UNIT_Z, Ogre::Vector3(0,0,0), "floor", 120, 300);
 
 	walls[1] = new Wall(scnMgr, sim, Ogre::Vector3::NEGATIVE_UNIT_Y, 
-	Ogre::Vector3::UNIT_Z, Ogre::Vector3(0,500,0), "roof", 1200, 3000);
+	Ogre::Vector3::UNIT_Z, Ogre::Vector3(0,50,0), "roof", 120, 300);
 
 	walls[2] = new Wall(scnMgr, sim, Ogre::Vector3::UNIT_Z, 
-	Ogre::Vector3::UNIT_Y, Ogre::Vector3(0,250,-1500), "wall1", 1200, 500);
+	Ogre::Vector3::UNIT_Y, Ogre::Vector3(0,25,-150), "wall1", 120, 50);
 
 	walls[3] = new Wall(scnMgr, sim, Ogre::Vector3::NEGATIVE_UNIT_Z, 
-	Ogre::Vector3::UNIT_Y, Ogre::Vector3(0,250,1500), "wall2", 1200, 500);
+	Ogre::Vector3::UNIT_Y, Ogre::Vector3(0,25,150), "wall2", 120, 50);
 
 	walls[4] = new Wall(scnMgr, sim, Ogre::Vector3::UNIT_X, 
-	Ogre::Vector3::UNIT_Y, Ogre::Vector3(-600,250,0), "wall3", 3000, 500);
+	Ogre::Vector3::UNIT_Y, Ogre::Vector3(-60,25,0), "wall3", 300, 50);
 
 	walls[5] = new Wall(scnMgr, sim, Ogre::Vector3::NEGATIVE_UNIT_X, 
-	Ogre::Vector3::UNIT_Y, Ogre::Vector3(600,250,0), "wall4", 3000, 500);
+	Ogre::Vector3::UNIT_Y, Ogre::Vector3(60,25,0), "wall4", 300, 50);
 		        
 	x_length = 1200.0f;
     z_length = 3000.0f;

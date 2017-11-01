@@ -25,11 +25,13 @@ http://www.ogre3d.org/wiki/
 using namespace Ogre;
 
 Mix_Chunk* bounce = NULL;
+Mix_Chunk* score = NULL;
 CEGUI::Window *button1 = NULL;
 CEGUI::Window *button2 = NULL;
 int player1;
 int player2;
 bool isServer;
+bool menu;
 Server* server;
 Client* client;
 
@@ -48,12 +50,16 @@ TutorialApplication::TutorialApplication(void) :
 	player1 = 0;
 	player2 = 0;
 	isServer = true;
+    menu = false;
 }
 //---------------------------------------------------------------------------
 TutorialApplication::~TutorialApplication(void)
 {
     if (sim) delete sim;
     if (ball) delete ball;
+    if(net) delete net;
+    if(server) delete server;
+    if(client) delete client;
     if (lPaddle) delete lPaddle;
     if (rPaddle) delete rPaddle;
     CEGUI::OgreRenderer::destroySystem();
@@ -95,14 +101,8 @@ void TutorialApplication::createScene(void)
 
     ball = new Ball(mSceneMgr, sim, isServer);
     bCourt = new PlayingField(mSceneMgr, sim);
-    if(isServer){
-        lPaddle = new Paddle("left", mSceneMgr, sim, Ogre::Vector3(0,50,1200), 0);
-    	rPaddle = new Paddle("right", mSceneMgr, sim, Ogre::Vector3(0,50,-1200), 0);
-    }
-    else{
-        lPaddle = new Paddle("left", mSceneMgr, sim, Ogre::Vector3(0,50,-1200), 0);
-        rPaddle = new Paddle("right", mSceneMgr, sim, Ogre::Vector3(0,50,1200), 0);
-    }
+    lPaddle = new Paddle("player1", mSceneMgr, sim, Ogre::Vector3(0,5,-120), 0);
+    rPaddle = new Paddle("player2", mSceneMgr, sim, Ogre::Vector3(0,5,120), 0);
 
     ball->addToSimulator();
     bCourt->addToSimulator();
@@ -110,7 +110,7 @@ void TutorialApplication::createScene(void)
     rPaddle->addToSimulator();
 
     Ogre::Light* light = mSceneMgr->createLight("MainLight");
-    light->setPosition(500, 500, 500);
+    light->setPosition(50, 50, 50);
     light->setDiffuseColour(0.1, 0.6, 0.6);
     light->setSpecularColour(0.91, 0.9, 0.9);
 
@@ -120,8 +120,12 @@ void TutorialApplication::createScene(void)
     pointLight->setSpecularColour(0.2, 0.0, 0.1);
     pointLight->setPosition(Ogre::Vector3(0, 0, 0));
    
-    mCamera->setPosition(-300, 2200, 950);
-    mCamera->lookAt(Ogre::Vector3(-300,50,750));
+    if(isServer)
+        mCamera->setPosition(-30, 220, 95);
+    else{
+        mCamera->setPosition(-30, 220, -95);
+    }
+    mCamera->lookAt(Ogre::Vector3(-30,50,75));
 
     //Starting score display   
     std::stringstream ss1;
@@ -145,6 +149,7 @@ void TutorialApplication::createScene(void)
     Mix_OpenAudio( 22050, MIX_DEFAULT_FORMAT, 2, 4096 );
 
     bounce = Mix_LoadWAV( "aww.wav" );
+    score = Mix_LoadWAV( "cheer.wav" );
 
 }
 //---------------------------------------------------------------------------
@@ -167,78 +172,97 @@ void TutorialApplication::createViewports(void)
 bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
 {
   bool ret = BaseApplication::frameRenderingQueued(fe);
-
-  if(zPressed && cPressed){
-
-  }
-  else if(cPressed){
+  if(!menu)
+  {
+    if(zPressed && cPressed){}
+    else if(cPressed){
         lPaddle->yaw -= 25;
-        lPaddle->getNode()->translate(100*fe.timeSinceLastFrame*Ogre::Vector3(6,0,0));
-        lPaddle->getBody()->translate(100*fe.timeSinceLastFrame*btVector3(6,0,0));
+        lPaddle->getNode()->translate(10*fe.timeSinceLastFrame*Ogre::Vector3(6,0,0));
+        lPaddle->getBody()->translate(10*fe.timeSinceLastFrame*btVector3(6,0,0));
 
     }
-  else if(zPressed){
+    else if(zPressed){
         lPaddle->yaw += 25;
-        lPaddle->getNode()->translate(100*fe.timeSinceLastFrame*Ogre::Vector3(-6,0,0));
-        lPaddle->getBody()->translate(100*fe.timeSinceLastFrame*btVector3(-6,0,0));
+        lPaddle->getNode()->translate(10*fe.timeSinceLastFrame*Ogre::Vector3(-6,0,0));
+        lPaddle->getBody()->translate(10*fe.timeSinceLastFrame*btVector3(-6,0,0));
     }
 
-  if(!ball->firstHit){
-    ball->getBody()->applyCentralForce(btVector3(100, 0, 600));
-  }
-  if(ball->getNode()->getPosition().z >= 1300){
-    if(sound)
-        Mix_PlayChannel( -1, bounce, 0 );
-	player2++;
-    delete ball;
-    ball = new Ball(mSceneMgr, sim, isServer);
-    ball->addToSimulator();
-    //bCourt->rebuildObstacles(mSceneMgr, sim);
-  }
-  if(ball->getNode()->getPosition().z <= -1300){
-    if(sound)
-        Mix_PlayChannel( -1, bounce, 0 );
-	player1++;
-    delete ball;
-    ball = new Ball(mSceneMgr, sim, isServer);
-    ball->addToSimulator();
-    //bCourt->rebuildObstacles(mSceneMgr, sim);
-  }
-  if(!isServer){
-    client->update(Ogre::StringConverter::toString(lPaddle->getPosition()));
-    client->update(Ogre::StringConverter::toString(ball->getPosition()));
-  }
-  else{
-    server->update(Ogre::StringConverter::toString(lPaddle->getPosition()));
+    if(!ball->firstHit){
+    ball->getBody()->applyCentralForce(btVector3(10, 0, 60));
+    }
+    if(ball->getNode()->getPosition().z >= 140){
+        if(sound)
+            Mix_PlayChannel( -1, bounce, 0 );
+	   player2++;
+        delete ball;
+        ball = new Ball(mSceneMgr, sim, isServer);
+        ball->addToSimulator();
+        //bCourt->rebuildObstacles(mSceneMgr, sim);
+    }
+    if(ball->getNode()->getPosition().z <= -140){
+        if(sound)
+            Mix_PlayChannel( -1, score, 0 );
+	   player1++;
+        delete ball;
+        ball = new Ball(mSceneMgr, sim, isServer);
+        ball->addToSimulator();
+        //bCourt->rebuildObstacles(mSceneMgr, sim);
+    }
+    if(!isServer){
+        client->update(Ogre::StringConverter::toString(lPaddle->getPosition().x));
 
-    //rPaddle->getNode()->setPosition(Ogre::Vector3(ball->getPosition().x, 50,-1200));
-    //rPaddle->getBody()->getMotionState()->updateTransform(btVector3(ball->getPosition().x, 50,-1200));
+        if(net->pollForActivity(1)){
+            Ogre::String message;
+            std::istringstream data(net->udpServerData[0].output);
+            data >> message;
+            rPaddle->getNode()->setPosition(Ogre::Vector3(Ogre::StringConverter::parseReal(message),5,120)); 
+            data >> message;
+            ball->getNode()->setPosition(Ogre::StringConverter::parseVector3(message));
+        }
+    }
+    else{
+        server->update(Ogre::StringConverter::toString(lPaddle->getPosition()));
+        server->update(Ogre::StringConverter::toString(ball->getPosition()));
+        rPaddle->getNode()->setPosition(Ogre::Vector3(ball->getPosition().x, 5,120));
+        if(net->pollForActivity(1)){
+            Ogre::String message;
+            std::istringstream data(net->udpServerData[0].output);
+            data >> message;
+            rPaddle->getNode()->setPosition(Ogre::Vector3(Ogre::StringConverter::parseReal(message),5,120)); 
+        }
+    }
+
+
+    sim->stepSimulation(fe.timeSinceLastFrame);
+    Ogre::Vector3 ballpos = ball->getNode()->getPosition();
+    Ogre::Vector3 original = mCamera->getPosition(); 
+    Ogre::Vector3 newpos(ballpos.x, original.y, ballpos.z + 200);
+    newpos = newpos + mCamera->getDirection() * zoom;
+    mCamera->setPosition(newpos);
+
+    //Update score display
+    std::stringstream ss1;
+    ss1 << player1;
+    std::string display = "YOU: " + ss1.str();
+    button1->setText(display);
+    std::stringstream ss2;
+    ss2 << player2;
+    display = "NOT YOU: " + ss2.str();
+    button2->setText(display);
   }
-
-
-  sim->stepSimulation(fe.timeSinceLastFrame);
-  Ogre::Vector3 ballpos = ball->getNode()->getPosition();
-  Ogre::Vector3 original = mCamera->getPosition(); 
-  Ogre::Vector3 newpos(ballpos.x, original.y, ballpos.z + 200);
-  newpos = newpos + mCamera->getDirection() * zoom;
-  mCamera->setPosition(newpos);
-
-  //Update score display
-  std::stringstream ss1;
-  ss1 << player1;
-  std::string display = "YOU: " + ss1.str();
-  button1->setText(display);
-  std::stringstream ss2;
-  ss2 << player2;
-  display = "NOT YOU: " + ss2.str();
-  button2->setText(display);
-
-  return ret;
+return ret;
 }
 
  
 bool TutorialApplication::keyPressed(const OIS::KeyEvent& ke){
     BaseApplication::keyPressed(ke);
+    // if(menu)
+    // {
+    //     switch(ke.key)
+    //     {
+    //         case OIS::KC
+    //     }
+    // }
     switch(ke.key)
     {
         case OIS::KC_ESCAPE:

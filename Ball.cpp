@@ -6,14 +6,15 @@ Ball::Ball(Ogre::SceneManager* scnMgr, Simulator* sim, bool server) : GameObject
 	geom->setMaterialName("blank");
 	geom->setCastShadows(true);
 	rootNode->attachObject(geom);
-	rootNode->setPosition(-300,50,0);
+	rootNode->setScale(0.1,0.1,0.1);
+	rootNode->setPosition(-30,5,0);
 	restitution = 0.6f;
 	friction = 0.1f;
 	if(server)
 	    mass = 1.0f;
 	else
 	    mass = 0.0f;
-	bRadius = 40.0f;
+	bRadius = 2.5f;
 	shape = new btSphereShape(bRadius);
 	firstHit = false;
 	score = 0;

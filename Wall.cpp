@@ -24,11 +24,11 @@ Wall::Wall(Ogre::SceneManager* scnMgr, Simulator* sim,
 	friction = 0.1f;
 	
 	if(normal == Ogre::Vector3::UNIT_Y || normal == Ogre::Vector3::NEGATIVE_UNIT_Y)
-        shape = new btBoxShape(btVector3(size1*55, 5.0, size2*55));
+        shape = new btBoxShape(btVector3(size1*55, 0.5, size2*55));
     else if(normal == Ogre::Vector3::UNIT_Z || normal == Ogre::Vector3::NEGATIVE_UNIT_Z)
-        shape = new btBoxShape(btVector3(size1*55, size2*55, 5.0));
+        shape = new btBoxShape(btVector3(size1*55, size2*55, 0.5));
     else
-        shape = new btBoxShape(btVector3(5.0, size1*55, size2*55));
+        shape = new btBoxShape(btVector3(0.5, size1*55, size2*55));
 
     bounce = Mix_LoadWAV( "paddlehit.wav" );
 
