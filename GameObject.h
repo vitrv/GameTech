@@ -22,7 +22,6 @@ protected:
 	btRigidBody* body;
 	btTransform tr;
 	btVector3 inertia;
-	float lastTime;
 
 	btScalar mass;
 	btScalar restitution;
@@ -50,6 +49,7 @@ public:
 	void turnOffSound();
 	void turnOnSound();
 	virtual void update(Ogre::Real) {}
+	float lastTime;
 };
 
 #endif // #ifndef __GameObject_h_

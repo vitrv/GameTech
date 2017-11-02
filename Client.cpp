@@ -3,11 +3,8 @@
 Client::Client(NetManager* net, Ogre::String host_ip)
 {
 	netMgr = net;
-	netMgr->joinMultiPlayer(host_ip);
-}
-
-void Client::joinLobby(){
-	netMgr->close();
+	netMgr->addNetworkInfo(PROTOCOL_UDP, host_ip.c_str(), 51215);
+	netMgr->startClient();
 }
 
 void Client::update(Ogre::String message){

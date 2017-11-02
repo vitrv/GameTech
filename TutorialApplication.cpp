@@ -32,6 +32,7 @@ int player1;
 int player2;
 bool isServer;
 bool menu;
+bool multiplayer;
 Server* server;
 Client* client;
 
@@ -50,7 +51,8 @@ TutorialApplication::TutorialApplication(void) :
 	player1 = 0;
 	player2 = 0;
 	isServer = true;
-    menu = false;
+    multiplayer = false;
+    menu = true;
 }
 //---------------------------------------------------------------------------
 TutorialApplication::~TutorialApplication(void)
@@ -92,19 +94,13 @@ void TutorialApplication::createScene(void)
 
     net = new NetManager();
     net->initNetManager();
-    if(isServer){
-    	server = new Server(net);
-        server->startLobby();
-    }
-    else
-		client = new Client(net, "128.83.130.90");
 
-    ball = new Ball(mSceneMgr, sim, isServer);
+    //ball = new Ball(mSceneMgr, sim, isServer);
     bCourt = new PlayingField(mSceneMgr, sim);
     lPaddle = new Paddle("player1", mSceneMgr, sim, Ogre::Vector3(0,5,-120), 0);
     rPaddle = new Paddle("player2", mSceneMgr, sim, Ogre::Vector3(0,5,120), 0);
 
-    ball->addToSimulator();
+    //ball->addToSimulator();
     bCourt->addToSimulator();
     lPaddle->addToSimulator();
     rPaddle->addToSimulator();
@@ -120,11 +116,7 @@ void TutorialApplication::createScene(void)
     pointLight->setSpecularColour(0.2, 0.0, 0.1);
     pointLight->setPosition(Ogre::Vector3(0, 0, 0));
    
-    if(isServer)
-        mCamera->setPosition(-30, 220, 95);
-    else{
-        mCamera->setPosition(-30, 220, -95);
-    }
+    mCamera->setPosition(-30, 220, 95);
     mCamera->lookAt(Ogre::Vector3(-30,50,75));
 
     //Starting score display   
@@ -178,19 +170,19 @@ bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
     else if(cPressed){
         lPaddle->yaw -= 25;
         lPaddle->getNode()->translate(10*fe.timeSinceLastFrame*Ogre::Vector3(6,0,0));
-        lPaddle->getBody()->translate(10*fe.timeSinceLastFrame*btVector3(6,0,0));
+        //lPaddle->getBody()->translate(10*fe.timeSinceLastFrame*btVector3(6,0,0));
 
     }
     else if(zPressed){
         lPaddle->yaw += 25;
         lPaddle->getNode()->translate(10*fe.timeSinceLastFrame*Ogre::Vector3(-6,0,0));
-        lPaddle->getBody()->translate(10*fe.timeSinceLastFrame*btVector3(-6,0,0));
+        //lPaddle->getBody()->translate(10*fe.timeSinceLastFrame*btVector3(-6,0,0));
     }
 
     if(!ball->firstHit){
-    ball->getBody()->applyCentralForce(btVector3(10, 0, 60));
+        ball->getBody()->applyCentralForce(btVector3(30, 0, 150));
     }
-    if(ball->getNode()->getPosition().z >= 140){
+    if(ball->getNode()->getPosition().z >= -140){
         if(sound)
             Mix_PlayChannel( -1, bounce, 0 );
 	   player2++;
@@ -199,7 +191,7 @@ bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
         ball->addToSimulator();
         //bCourt->rebuildObstacles(mSceneMgr, sim);
     }
-    if(ball->getNode()->getPosition().z <= -140){
+    if(ball->getNode()->getPosition().z <= 140){
         if(sound)
             Mix_PlayChannel( -1, score, 0 );
 	   player1++;
@@ -208,26 +200,42 @@ bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
         ball->addToSimulator();
         //bCourt->rebuildObstacles(mSceneMgr, sim);
     }
-    if(!isServer){
+    if(!multiplayer){
+        if(rPaddle->lastTime > 1.2){
+            if(ball->getPosition().x > rPaddle->getPosition().x)
+                rPaddle->getNode()->translate(10*fe.timeSinceLastFrame*Ogre::Vector3(4,0,0));
+            else 
+                rPaddle->getNode()->translate(10*fe.timeSinceLastFrame*Ogre::Vector3(-4,0,0));
+        }
+        else{
+            if(rPaddle->getPosition().x > 0)
+                rPaddle->getNode()->translate(10*fe.timeSinceLastFrame*Ogre::Vector3(-4,0,0));
+            else
+                rPaddle->getNode()->translate(10*fe.timeSinceLastFrame*Ogre::Vector3(4,0,0));
+        }
+        //rPaddle->getNode()->setPosition(Ogre::Vector3(ball->getPosition().x, 5,120));
+    }
+    else if(!isServer){
         client->update(Ogre::StringConverter::toString(lPaddle->getPosition().x));
-
         if(net->pollForActivity(1)){
             Ogre::String message;
             std::istringstream data(net->udpServerData[0].output);
             data >> message;
-            rPaddle->getNode()->setPosition(Ogre::Vector3(Ogre::StringConverter::parseReal(message),5,120)); 
+            std::cout << message;
+            rPaddle->getNode()->setPosition(Ogre::Vector3(Ogre::StringConverter::parseReal(message),5,-120)); 
             data >> message;
+            std::cout << message;
             ball->getNode()->setPosition(Ogre::StringConverter::parseVector3(message));
         }
     }
     else{
         server->update(Ogre::StringConverter::toString(lPaddle->getPosition()));
         server->update(Ogre::StringConverter::toString(ball->getPosition()));
-        rPaddle->getNode()->setPosition(Ogre::Vector3(ball->getPosition().x, 5,120));
         if(net->pollForActivity(1)){
             Ogre::String message;
-            std::istringstream data(net->udpServerData[0].output);
+            std::istringstream data(net->udpClientData[0]->output);
             data >> message;
+            std::cout << message;
             rPaddle->getNode()->setPosition(Ogre::Vector3(Ogre::StringConverter::parseReal(message),5,120)); 
         }
     }
@@ -250,56 +258,88 @@ bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
     display = "NOT YOU: " + ss2.str();
     button2->setText(display);
   }
+  else if(isServer && multiplayer){
+    if(net->pollForActivity(1)){
+        ball = new Ball(mSceneMgr, sim, isServer);
+        ball->addToSimulator();
+        menu = false;
+    }
+  }
 return ret;
 }
 
  
 bool TutorialApplication::keyPressed(const OIS::KeyEvent& ke){
     BaseApplication::keyPressed(ke);
-    // if(menu)
-    // {
-    //     switch(ke.key)
-    //     {
-    //         case OIS::KC
-    //     }
-    // }
-    switch(ke.key)
+    if(menu)
     {
-        case OIS::KC_ESCAPE:
-            mShutDown = true;
-            break;
+        switch(ke.key)
+        {
+            case OIS::KC_N:
+                menu = false;
+                break;
+            case OIS::KC_S:
+                server = new Server(net);
+                server->startLobby();
+                multiplayer = true;
+                break;
+            case OIS::KC_C:
+                client = new Client(net, "128.83.139.156");
+                client->update("hi");
+                isServer = false;
+                multiplayer = true;
+                mCamera->setPosition(-30, 220, -95);
+                mCamera->lookAt(Ogre::Vector3(-30,50,75));
+                ball = new Ball(mSceneMgr, sim, isServer);
+                ball->addToSimulator();
+                menu = false;
+                break;
+            case OIS::KC_ESCAPE:
+                mShutDown = true;
+                break;
+            default:
+                break;
+        }
+    }
+    else{
+        switch(ke.key)
+        {
+            case OIS::KC_ESCAPE:
+                mShutDown = true;
+                break;
 
-        case OIS::KC_Z:
-            zPressed = true;
-            break;
+            case OIS::KC_Z:
+                zPressed = true;
+                break;
 
-        case OIS::KC_C:
-            cPressed = true;
-            break;
-        case OIS::KC_S:
-            zoom = -1;
-            break;
-        case OIS::KC_X:
-            zoom = 1;
-            break;    
+            case OIS::KC_C:
+                cPressed = true;
+                break;
+            case OIS::KC_S:
+                zoom = -1;
+                break;
+            case OIS::KC_X:
+                zoom = 1;
+                break;    
 
-        case OIS::KC_M:
-            if(sound){
-                sound = false;
-                lPaddle->turnOffSound();
-                ball->turnOffSound();
-                bCourt->turnOffSound();
-            }
-            else{
-                sound = true;
-                lPaddle->turnOnSound();
-                ball->turnOnSound();
-                bCourt->turnOnSound();
-            }
-            break;        
+            case OIS::KC_M:
+                if(sound){
+                    sound = false;
+                    lPaddle->turnOffSound();
+                    ball->turnOffSound();
+                    bCourt->turnOffSound();
+                }
+                else{
+                    sound = true;
+                    lPaddle->turnOnSound();
+                    ball->turnOnSound();
+                    bCourt->turnOnSound();
+                }
+                break;        
  
-        default:
-            break;
+            default:
+                break;
+        }
     }
     return true;
 }

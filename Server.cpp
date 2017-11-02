@@ -8,7 +8,7 @@ Server::Server(NetManager* net)
 }
 
 void Server::startLobby(){
-	netMgr->multiPlayerInit();
+	netMgr->acceptConnections();
 }
 
 void Server::closeLobby(){
