@@ -7,5 +7,6 @@ protected:
 	NetManager* netMgr;
 public:
 	Client(NetManager* net, Ogre::String host_ip);
+	~Client();
 	void update(Ogre::String message);
 };

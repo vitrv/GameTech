@@ -7,12 +7,12 @@ Server::Server(NetManager* net)
 	netMgr->startServer();
 }
 
-void Server::startLobby(){
-	netMgr->acceptConnections();
+Server::~Server(){
+	netMgr->stopServer();
 }
 
-void Server::closeLobby(){
-	netMgr->close();
+void Server::startLobby(){
+	netMgr->acceptConnections();
 }
 
 void Server::update(Ogre::String message){

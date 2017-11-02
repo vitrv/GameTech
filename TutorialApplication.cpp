@@ -33,6 +33,7 @@ int player2;
 bool isServer;
 bool menu;
 bool multiplayer;
+bool even;
 Server* server;
 Client* client;
 
@@ -48,20 +49,21 @@ TutorialApplication::TutorialApplication(void) :
     sound(true),
     mRenderer(0)
 {
-	player1 = 0;
-	player2 = 0;
-	isServer = true;
+    player1 = 0;
+    player2 = 0;
+    isServer = true;
     multiplayer = false;
     menu = true;
+    even = true;
 }
 //---------------------------------------------------------------------------
 TutorialApplication::~TutorialApplication(void)
 {
     if (sim) delete sim;
     if (ball) delete ball;
-    if(net) delete net;
     if(server) delete server;
     if(client) delete client;
+    if(net) delete net;
     if (lPaddle) delete lPaddle;
     if (rPaddle) delete rPaddle;
     CEGUI::OgreRenderer::destroySystem();
@@ -95,12 +97,12 @@ void TutorialApplication::createScene(void)
     net = new NetManager();
     net->initNetManager();
 
-    //ball = new Ball(mSceneMgr, sim, isServer);
+    ball = new Ball(mSceneMgr, sim, isServer);
     bCourt = new PlayingField(mSceneMgr, sim);
     lPaddle = new Paddle("player1", mSceneMgr, sim, Ogre::Vector3(0,5,-120), 0);
     rPaddle = new Paddle("player2", mSceneMgr, sim, Ogre::Vector3(0,5,120), 0);
 
-    //ball->addToSimulator();
+    ball->addToSimulator();
     bCourt->addToSimulator();
     lPaddle->addToSimulator();
     rPaddle->addToSimulator();
@@ -179,22 +181,28 @@ bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
         //lPaddle->getBody()->translate(10*fe.timeSinceLastFrame*btVector3(-6,0,0));
     }
 
-    if(!ball->firstHit){
-        ball->getBody()->applyCentralForce(btVector3(30, 0, 150));
+    if(!ball->firstHit && isServer){
+        //float randNum = rand() % 2 - 1;
+        //int randSign = randNum/randNum;
+        if(even)
+            ball->getBody()->applyCentralForce(btVector3(rand() % 10 + 30, 0, 150));
+        else
+            ball->getBody()->applyCentralForce(btVector3(rand() % 10 - 40, 0, 150));
+        even = !even;
     }
-    if(ball->getNode()->getPosition().z >= -140){
+    if(ball->getNode()->getPosition().z <= -140){
         if(sound)
             Mix_PlayChannel( -1, bounce, 0 );
-	   player2++;
+       player2++;
         delete ball;
         ball = new Ball(mSceneMgr, sim, isServer);
         ball->addToSimulator();
         //bCourt->rebuildObstacles(mSceneMgr, sim);
     }
-    if(ball->getNode()->getPosition().z <= 140){
+    if(ball->getNode()->getPosition().z >= 140){
         if(sound)
             Mix_PlayChannel( -1, score, 0 );
-	   player1++;
+       player1++;
         delete ball;
         ball = new Ball(mSceneMgr, sim, isServer);
         ball->addToSimulator();
@@ -260,8 +268,6 @@ bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
   }
   else if(isServer && multiplayer){
     if(net->pollForActivity(1)){
-        ball = new Ball(mSceneMgr, sim, isServer);
-        ball->addToSimulator();
         menu = false;
     }
   }
@@ -284,14 +290,12 @@ bool TutorialApplication::keyPressed(const OIS::KeyEvent& ke){
                 multiplayer = true;
                 break;
             case OIS::KC_C:
-                client = new Client(net, "128.83.139.156");
+                client = new Client(net, "128.83.130.92");
                 client->update("hi");
                 isServer = false;
                 multiplayer = true;
-                mCamera->setPosition(-30, 220, -95);
-                mCamera->lookAt(Ogre::Vector3(-30,50,75));
-                ball = new Ball(mSceneMgr, sim, isServer);
-                ball->addToSimulator();
+                //mCamera->setPosition(-30, 220, -95);
+                //mCamera->lookAt(Ogre::Vector3(-30,50,75));
                 menu = false;
                 break;
             case OIS::KC_ESCAPE:
@@ -407,5 +411,3 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-//---------------------------------------------------------------------------

@@ -7,7 +7,7 @@ protected:
 	NetManager* netMgr;
 public:
 	Server(NetManager* net);
+	~Server();
 	void startLobby();
-	void closeLobby();
 	void update(Ogre::String message);
 };

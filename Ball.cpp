@@ -7,7 +7,7 @@ Ball::Ball(Ogre::SceneManager* scnMgr, Simulator* sim, bool server) : GameObject
 	geom->setCastShadows(true);
 	rootNode->attachObject(geom);
 	rootNode->setScale(0.1,0.1,0.1);
-	rootNode->setPosition(-30,5,0);
+	rootNode->setPosition(0,5,0);
 	restitution = 0.6f;
 	friction = 0.1f;
 	if(server)
