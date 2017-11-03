@@ -1,5 +1,7 @@
 #include "Ball.h"
 
+bool isServ;
+
 Ball::Ball(Ogre::SceneManager* scnMgr, Simulator* sim, bool server) : GameObject("ball",scnMgr,sim)
 {
 	geom = scnMgr->createEntity("ball", Ogre::SceneManager::PT_SPHERE);
@@ -18,10 +20,15 @@ Ball::Ball(Ogre::SceneManager* scnMgr, Simulator* sim, bool server) : GameObject
 	shape = new btSphereShape(bRadius);
 	firstHit = false;
 	score = 0;
+	isServ = server;
 }
 
 void Ball::update(float elapsedTime) {
 	lastTime += elapsedTime;
+	if(!isServ){
+		updateTransform();
+		body->setWorldTransform(tr);
+	}
 	simulator->getWorld()->contactTest(body, *cCallBack);
 	if (context->hit && (context->velNorm > 2.0 || context->velNorm < -2.0) 
 		&& (lastTime > 0.5 || (context->lastBody != context->body && lastTime > 0.1))) {
