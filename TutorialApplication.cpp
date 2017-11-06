@@ -124,12 +124,12 @@ void TutorialApplication::createScene(void)
     //Starting score display   
     std::stringstream ss1;
     ss1 << player1;
-    std::string display = "YOU: " + ss1.str();
+    std::string display = "Player 1: " + ss1.str();
     button1->setText(display);
     button1->setSize(CEGUI::USize(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
     std::stringstream ss2;
     ss2 << player2;
-    display = "NOT YOU: " + ss2.str();
+    display = "Player 2: " + ss2.str();
     button2->setText(display);
     button2->setSize(CEGUI::USize(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
     button2->setPosition(CEGUI::UVector2(CEGUI::UDim(0.85f, 0),
@@ -229,47 +229,42 @@ bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
             else
                 rPaddle->getNode()->translate(10*fe.timeSinceLastFrame*Ogre::Vector3(4,0,0));
         }
-        //rPaddle->getNode()->setPosition(Ogre::Vector3(ball->getPosition().x, 5,120));
     }
     else if(!isServer){
         client->update(Ogre::StringConverter::toString(rPaddle->getPosition().x));
         if(net->pollForActivity(1)){
             Ogre::String message;
-            std::istringstream data(net->udpServerData[0].output);
-            data >> message;
-            //std::cout << message << "\n";
+            std::istringstream data(Ogre::String(net->udpServerData[0].output));
+
+            std::getline(data, message, ' ');
             lPaddle->getNode()->setPosition(Ogre::Vector3(Ogre::StringConverter::parseReal(message),5,-120)); 
 
-            Ogre::Vector3 ballPos; 
-            data >> message;
+            Ogre::Vector3 ballPos = Ogre::Vector3(0,0,0); 
+            std::getline(data, message, ' ');
             ballPos.x = Ogre::StringConverter::parseReal(message);
-            //std::cout << message << " ";
-            data >> message;
+
+            std::getline(data, message, ' ');
             ballPos.y = Ogre::StringConverter::parseReal(message);
-            //std::cout << message << " ";
-            data >> message;
+
+            std::getline(data, message, ' ');
             ballPos.z = Ogre::StringConverter::parseReal(message);
-            //std::cout << message << "\n";
+
             ball->getNode()->setPosition(ballPos);
 
-            data >> message;
+            std::getline(data, message, ' ');
             player1 = Ogre::StringConverter::parseInt(message);
 
-            data >> message;
+            std::getline(data, message, ' ');
             player2 = Ogre::StringConverter::parseInt(message);
+
         }
     }
     else{
         server->update(Ogre::StringConverter::toString(lPaddle->getPosition().x) + " " + Ogre::StringConverter::toString(ball->getPosition()) + " " 
-            + Ogre::StringConverter::toString(player1) + " " + Ogre::StringConverter::toString(player2));
-        //server->update(Ogre::StringConverter::toString(ball->getPosition()));
-        //std::cout << Ogre::StringConverter::toString(ball->getPosition()) << "\n";
+            + Ogre::StringConverter::toString(player1) + " " + Ogre::StringConverter::toString(player2) + " ");
         if(net->pollForActivity(1)){
-            Ogre::String message;
-            std::istringstream data(net->udpClientData[0]->output);
-            data >> message;
-            //std::cout << message;
-            rPaddle->getNode()->setPosition(Ogre::Vector3(Ogre::StringConverter::parseReal(message),5,120)); 
+            Ogre::String data(net->udpClientData[0]->output);
+            rPaddle->getNode()->setPosition(Ogre::Vector3(Ogre::StringConverter::parseReal(data),5,120)); 
         }
     }
 
@@ -284,11 +279,11 @@ bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
     //Update score display
     std::stringstream ss1;
     ss1 << player1;
-    std::string display1 = "YOU: " + ss1.str();
+    std::string display1 = "Player 1: " + ss1.str();
     button1->setText(display1);
     std::stringstream ss2;
     ss2 << player2;
-    std:: string display2 = "NOT YOU: " + ss2.str();
+    std:: string display2 = "Player 2: " + ss2.str();
     button2->setText(display2);
   }
   else if(isServer && multiplayer){
@@ -315,8 +310,8 @@ bool TutorialApplication::keyPressed(const OIS::KeyEvent& ke){
                 multiplayer = true;
                 break;
             case OIS::KC_C:
-                client = new Client(net, "128.83.144.93");
-                client->update("hi");
+                client = new Client(net, "128.83.120.232");
+                //client->update("hi");
                 isServer = false;
                 multiplayer = true;
                 menu = false;

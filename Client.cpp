@@ -13,5 +13,5 @@ Client::~Client(){
 
 void Client::update(Ogre::String message){
 	const char* cmsg = message.c_str();
-	netMgr->messageServer(PROTOCOL_UDP, cmsg, message.size());
+	netMgr->messageServer(PROTOCOL_UDP, cmsg, strlen(cmsg));
 }

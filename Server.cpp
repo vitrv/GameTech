@@ -17,5 +17,6 @@ void Server::startLobby(){
 
 void Server::update(Ogre::String message){
 	const char* cmsg = message.c_str();
-	netMgr->messageClients(PROTOCOL_UDP, cmsg, message.size());
+	//std::cout << cmsg << "\n"; 
+	netMgr->messageClients(PROTOCOL_UDP, cmsg, strlen(cmsg));
 }
