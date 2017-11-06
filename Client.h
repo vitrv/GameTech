@@ -1,5 +1,6 @@
 #include <Ogre.h>
 #include "NetManager.h"
+#include <CEGUI/CEGUI.h>
 #include "Simulator.h"
 
 class Client{

@@ -26,19 +26,27 @@ using namespace Ogre;
 
 Mix_Chunk* bounce = NULL;
 Mix_Chunk* score = NULL;
+
+CEGUI::Window *sheet;
 CEGUI::Window *button1 = NULL;
 CEGUI::Window *button2 = NULL;
+CEGUI::Window *singlePlayerBut = NULL;
+CEGUI::Window *serverBut = NULL;
+CEGUI::Window *clientBut = NULL;
+
 int player1;
 int player2;
 bool isServer;
 bool menu;
 bool multiplayer;
 bool even;
+
+Ogre::String serverName;
 Server* server;
 Client* client;
 
 //---------------------------------------------------------------------------
-TutorialApplication::TutorialApplication(void) : 
+TutorialApplication::TutorialApplication() : 
     ball(0), 
     lPaddle(0),
     rPaddle(0),
@@ -84,10 +92,13 @@ void TutorialApplication::createScene(void)
     CEGUI::SchemeManager::getSingleton().createFromFile("TaharezLook.scheme");
  
     CEGUI::WindowManager &wmgr = CEGUI::WindowManager::getSingleton();
-    CEGUI::Window *sheet = wmgr.createWindow("DefaultWindow", "CEGUIDemo/Sheet");
+    sheet = wmgr.createWindow("DefaultWindow", "CEGUIDemo/Sheet");
  
     button1 = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/QuitButton");
     button2 = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/QuitButton");
+    singlePlayerBut = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/QuitButton");
+    serverBut = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/QuitButton");
+    clientBut = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/QuitButton");
     
     mSceneMgr->setAmbientLight(Ogre::ColourValue(0.4, 0.3, 0.5 ));
     mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_ADDITIVE);
@@ -127,6 +138,7 @@ void TutorialApplication::createScene(void)
     std::string display = "Player 1: " + ss1.str();
     button1->setText(display);
     button1->setSize(CEGUI::USize(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
+
     std::stringstream ss2;
     ss2 << player2;
     display = "Player 2: " + ss2.str();
@@ -134,9 +146,26 @@ void TutorialApplication::createScene(void)
     button2->setSize(CEGUI::USize(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
     button2->setPosition(CEGUI::UVector2(CEGUI::UDim(0.85f, 0),
                                 CEGUI::UDim(0.0f, 0)));
+    singlePlayerBut->setText("1: Single Player");
+    singlePlayerBut->setSize(CEGUI::USize(CEGUI::UDim(0.3, 0), CEGUI::UDim(0.05, 0)));
+    singlePlayerBut->setPosition(CEGUI::UVector2(CEGUI::UDim(0.35f, 0),
+                                CEGUI::UDim(0.2f, 0)));
+
+    serverBut->setText("2: Start Server");
+    serverBut->setSize(CEGUI::USize(CEGUI::UDim(0.3, 0), CEGUI::UDim(0.05, 0)));
+    serverBut->setPosition(CEGUI::UVector2(CEGUI::UDim(0.35f, 0),
+                                CEGUI::UDim(0.3f, 0)));
+
+    clientBut->setText("3: Start Client");
+    clientBut->setSize(CEGUI::USize(CEGUI::UDim(0.3, 0), CEGUI::UDim(0.05, 0)));
+    clientBut->setPosition(CEGUI::UVector2(CEGUI::UDim(0.35f, 0),
+                                CEGUI::UDim(0.4f, 0)));
 
     sheet->addChild(button1);
     sheet->addChild(button2);
+    sheet->addChild(singlePlayerBut);
+    sheet->addChild(serverBut);
+    sheet->addChild(clientBut);
     CEGUI::System::getSingleton().getDefaultGUIContext().setRootWindow(sheet);
 
     SDL_Init( SDL_INIT_EVERYTHING );
@@ -186,35 +215,37 @@ bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
     }
 
     if(!ball->firstHit && isServer){
-        //float randNum = rand() % 2 - 1;
-        //int randSign = randNum/randNum;
         if(even)
-            ball->getBody()->applyCentralForce(btVector3(rand() % 10 + 30, 0, 150));
+            ball->getBody()->applyCentralForce(btVector3(rand() % 10 + 80, 0, 150));
         else
-            ball->getBody()->applyCentralForce(btVector3(rand() % 10 - 40, 0, 150));
+            ball->getBody()->applyCentralForce(btVector3(rand() % 10 - 90, 0, 150));
         even = !even;
     }
-    if(ball->getNode()->getPosition().z <= -140){
-        if(isServer){
-            if(sound)
-                Mix_PlayChannel( -1, bounce, 0 );
-            player2++;
-            delete ball;
-            ball = new Ball(mSceneMgr, sim, isServer);
-            ball->addToSimulator();
-        }
+    if(ball->getNode()->getPosition().z <= -140 && isServer){
+        if(sound)
+            Mix_PlayChannel( -1, bounce, 0 );
+        player2++;
+        delete ball;
+        ball = new Ball(mSceneMgr, sim, isServer);
+        ball->addToSimulator();
         //bCourt->rebuildObstacles(mSceneMgr, sim);
     }
     if(ball->getNode()->getPosition().z >= 140){
-        if(isServer){
-            if(sound)
-                Mix_PlayChannel( -1, score, 0 ); //need to depend on player
-            player1++;
-            delete ball;
-            ball = new Ball(mSceneMgr, sim, isServer);
-            ball->addToSimulator();
-        }
+        if(sound)
+            Mix_PlayChannel( -1, score, 0 ); 
+        player1++;
+        delete ball;
+        ball = new Ball(mSceneMgr, sim, isServer);
+        ball->addToSimulator();
         //bCourt->rebuildObstacles(mSceneMgr, sim);
+    }
+    if(ball->getNode()->getPosition().z <= -130 && !isServer){
+        if(sound)
+            Mix_PlayChannel( -1, score, 0 );
+    }
+    if(ball->getNode()->getPosition().z >= 130 && !isServer){
+        if(sound)
+            Mix_PlayChannel( -1, bounce, 0 );
     }
     if(!multiplayer){
         if(rPaddle->lastTime > 1.2){
@@ -241,12 +272,15 @@ bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
 
             Ogre::Vector3 ballPos = Ogre::Vector3(0,0,0); 
             std::getline(data, message, ' ');
+            //std::cout << message << " ";
             ballPos.x = Ogre::StringConverter::parseReal(message);
 
             std::getline(data, message, ' ');
+            //std::cout << message << " ";
             ballPos.y = Ogre::StringConverter::parseReal(message);
 
             std::getline(data, message, ' ');
+            //std::cout << message << "\n";
             ballPos.z = Ogre::StringConverter::parseReal(message);
 
             ball->getNode()->setPosition(ballPos);
@@ -301,20 +335,28 @@ bool TutorialApplication::keyPressed(const OIS::KeyEvent& ke){
     {
         switch(ke.key)
         {
-            case OIS::KC_N:
+            case OIS::KC_1:
                 menu = false;
+                sheet->destroyChild(serverBut);
+                sheet->destroyChild(singlePlayerBut);
+                sheet->destroyChild(clientBut);
                 break;
-            case OIS::KC_S:
+            case OIS::KC_2:
                 server = new Server(net);
                 server->startLobby();
                 multiplayer = true;
+                sheet->destroyChild(serverBut);
+                sheet->destroyChild(singlePlayerBut);
+                sheet->destroyChild(clientBut);
                 break;
-            case OIS::KC_C:
-                client = new Client(net, "128.83.120.232");
-                //client->update("hi");
+            case OIS::KC_3:
+                client = new Client(net, serverName);
                 isServer = false;
                 multiplayer = true;
                 menu = false;
+                sheet->destroyChild(serverBut);
+                sheet->destroyChild(singlePlayerBut);
+                sheet->destroyChild(clientBut);
                 break;
             case OIS::KC_ESCAPE:
                 mShutDown = true;
@@ -323,6 +365,7 @@ bool TutorialApplication::keyPressed(const OIS::KeyEvent& ke){
                 break;
         }
     }
+
     else{
         switch(ke.key)
         {
@@ -409,6 +452,10 @@ extern "C" {
     {
         // Create application object
         TutorialApplication app;
+
+        if(argc > 1){
+            serverName = argv[1];
+        }
 
         try {
             app.go();

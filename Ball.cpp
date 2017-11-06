@@ -15,7 +15,7 @@ Ball::Ball(Ogre::SceneManager* scnMgr, Simulator* sim, bool server) : GameObject
 	if(server)
 	    mass = 1.0f;
 	else
-	    mass = 0.0f;
+	    mass = 0.01f;
 	bRadius = 2.5f;
 	shape = new btSphereShape(bRadius);
 	firstHit = false;
